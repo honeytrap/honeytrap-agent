@@ -33,12 +33,10 @@ package server
 import (
 	"context"
 	"encoding"
-	"fmt"
 	"io"
 	"net"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/mimoo/disco/libdisco"
 
 	logging "github.com/op/go-logging"
@@ -116,7 +114,7 @@ func (a *Agent) serv(l net.Listener) error {
 			break
 		}
 
-		fmt.Println(color.YellowString("Accepting connection from %s => %s", rw.RemoteAddr().String(), rw.LocalAddr().String()))
+		log.Infof("Accepting connection from %s => %s", rw.RemoteAddr().String(), rw.LocalAddr().String())
 
 		c, err := a.newConn(rw)
 		if err != nil {
@@ -147,17 +145,17 @@ func localIP() string {
 }
 
 func (a *Agent) Run(ctx context.Context) {
-	fmt.Println(color.YellowString("Honeytrap Agent starting (%s)...", a.token))
-	fmt.Println(color.YellowString("Version: %s (%s)", Version, ShortCommitID))
+	log.Infof("Honeytrap Agent starting (%s)...", a.token)
+	log.Infof("Version: %s (%s)", Version, ShortCommitID)
 
-	defer fmt.Println("Honeytrap Agent stopped.")
+	defer log.Infof("Honeytrap Agent stopped.")
 
 	go func() {
 		for {
 			a.in = make(chan encoding.BinaryMarshaler)
 
 			func() {
-				fmt.Println(color.YellowString("Connecting to Honeytrap... "))
+				log.Infof("Connecting to Honeytrap... ")
 
 				// configure the Disco connection
 				clientConfig := libdisco.Config{
@@ -175,10 +173,10 @@ func (a *Agent) Run(ctx context.Context) {
 
 				defer cc.Close()
 
-				fmt.Println(color.YellowString("Connected to Honeytrap."))
+				log.Infof("Connected to Honeytrap")
 
 				defer func() {
-					fmt.Println(color.YellowString("Honeytrap disconnected."))
+					log.Infof("Honeytrap disconnected.")
 				}()
 
 				cc.send(Handshake{})
@@ -207,7 +205,7 @@ func (a *Agent) Run(ctx context.Context) {
 					if _, ok := address.(*net.TCPAddr); ok {
 						l, err := net.Listen(address.Network(), address.String())
 						if err != nil {
-							fmt.Println(color.RedString("Error starting listener: %s", err.Error()))
+							log.Errorf("Error starting listener: %s", err.Error())
 							continue
 						}
 
@@ -247,7 +245,7 @@ func (a *Agent) Run(ctx context.Context) {
 						rwcancel()
 						return
 					} else if err != nil {
-						fmt.Println(err.Error())
+						log.Errorf(err.Error())
 						return
 					}
 
@@ -265,7 +263,7 @@ func (a *Agent) Run(ctx context.Context) {
 							break
 						}
 
-						fmt.Println(color.YellowString("Connection closed: %s => %s", v.Raddr.String(), v.Laddr.String()))
+						log.Infof("Connection closed: %s => %s", v.Raddr.String(), v.Laddr.String())
 
 						conn.Close()
 					}

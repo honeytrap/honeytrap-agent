@@ -35,7 +35,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"net"
-	"fmt"
 )
 
 type agentConnection struct {
@@ -102,17 +101,35 @@ func (ac agentConnection) send(o encoding.BinaryMarshaler) error {
 	// write type
 	switch o.(type) {
 	case Hello:
-		ac.Conn.Write([]byte{uint8(TypeHello)})
+		_, err := ac.Conn.Write([]byte{uint8(TypeHello)})
+		if err != nil {
+			log.Errorf("Error occured writing Hello: %s", err.Error())
+		}
 	case Handshake:
-		ac.Conn.Write([]byte{uint8(TypeHandshake)})
+		_, err := ac.Conn.Write([]byte{uint8(TypeHandshake)})
+		if err != nil {
+			log.Errorf("Error occured writing TypeHandshake: %s", err.Error())
+		}
 	case HandshakeResponse:
-		ac.Conn.Write([]byte{uint8(TypeHandshakeResponse)})
+		_, err := ac.Conn.Write([]byte{uint8(TypeHandshakeResponse)})
+		if err != nil {
+			log.Errorf("Error occured writing TypeHandshakeResponse: %s", err.Error())
+		}
 	case ReadWrite:
-		ac.Conn.Write([]byte{uint8(TypeReadWrite)})
+		_, err := ac.Conn.Write([]byte{uint8(TypeReadWrite)})
+		if err != nil {
+			log.Errorf("Error occured writing TypeReadWrite: %s", err.Error())
+		}
 	case Ping:
-		ac.Conn.Write([]byte{uint8(TypePing)})
+		_, err := ac.Conn.Write([]byte{uint8(TypePing)})
+		if err != nil {
+			log.Errorf("Error occured writing TypePing: %s", err.Error())
+		}
 	case EOF:
-		ac.Conn.Write([]byte{uint8(TypeEOF)})
+		_, err := ac.Conn.Write([]byte{uint8(TypeEOF)})
+		if err != nil {
+			log.Errorf("Error occured writing TypeEOF: %s", err.Error())
+		}
 	}
 
 	data, err := o.MarshalBinary()
@@ -124,12 +141,12 @@ func (ac agentConnection) send(o encoding.BinaryMarshaler) error {
 	binary.LittleEndian.PutUint16(buff[0:2], uint16(len(data)))
 
 	if _, err := ac.Conn.Write(buff); err != nil {
-		fmt.Printf("Error occured: %s \n", err.Error())
+		log.Errorf("Error occured writing data length: %s \n", err.Error())
 		return err
 	}
 
 	if _, err := ac.Conn.Write(data); err != nil {
-		fmt.Printf("Error occured: %s \n", err.Error())
+		log.Errorf("Error occured writing data: %s \n", err.Error())
 		return err
 	}
 
